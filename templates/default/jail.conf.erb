@@ -54,8 +54,8 @@ maxretry = 5
 [ssh-ddos]
 enabled = <%= @node[:fail2ban][:ssh_ddos] %>
 filter  = sshd-ddos
-action   = iptables-multiport[name=SSH, port="ssh,sftp", protocol=tcp]
-           sendmail-whois[name=SSH, dest=<%= @node[:fail2ban][:dest_email] %>]
+action   = iptables-multiport[name=SSH-ddos, port="ssh,sftp", protocol=tcp]
+           sendmail-whois[name=SSH-ddos, dest=<%= @node[:fail2ban][:dest_email] %>]
 logpath  = /var/log/secure
 maxretry = 5
 
@@ -73,7 +73,7 @@ enabled  = <%= @node[:fail2ban][:freeswitch_ddos] %>
 filter   = freeswitch-dos
 port = 5060,5061,5080,5081
 logpath  = <%= @node[:fail2ban][:freeswitch_logpath] %>
-action   = iptables-allports[name=freeswitch, protocol=all]
+action   = iptables-allports[name=freeswitch-dos, protocol=all]
            sendmail-whois[name=FreeSwitch-dos, dest=<%= @node[:fail2ban][:dest_email] %>]
 maxretry = 50
 findtime = 30
