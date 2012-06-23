@@ -20,6 +20,14 @@ package "fail2ban" do
   action :upgrade
 end
 
+if node.run_list.include?("role[freeswitch]")
+  set["fail2ban"]["freeswitch"] = "true"
+end
+
+if node.run_list.include?("role[opensips]")
+  set["fail2ban"]["opensips"] = "true"
+end
+
 %w{ fail2ban jail }.each do |cfg|
   template "/etc/fail2ban/#{cfg}.conf" do
     source "#{cfg}.conf.erb"

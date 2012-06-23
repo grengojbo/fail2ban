@@ -61,46 +61,40 @@ maxretry = 5
 
 [freeswitch]
 enabled  = <%= @node[:fail2ban][:freeswitch] %>
-port     = 5060,5061,5080,5081
 filter   = freeswitch
 logpath  = <%= @node[:fail2ban][:freeswitch_logpath] %>
 maxretry = 10
-action   = iptables-allports[name=freeswitch, protocol=all]
+action   = iptables-multiport[name=freeswitch, port="5060,5061,5080,5081", protocol=all]
            sendmail-whois[name=FreeSwitch, dest=<%= @node[:fail2ban][:dest_email] %>]
 
 [freeswitch-dos]
-enabled = <%= @node[:fail2ban][:freeswitch_ddos] %>
-port = 5060,5061,5080,5081
-filter = freeswitch-dos
-logpath = <%= @node[:fail2ban][:freeswitch_logpath] %>
-action = iptables-allports[name=freeswitch-dos, protocol=all]
-        sendmail-whois[name=FreeSwitch, dest=<%= @node[:fail2ban][:dest_email] %>]
+enabled  = <%= @node[:fail2ban][:freeswitch_ddos] %>
+filter   = freeswitch-dos
+logpath  = <%= @node[:fail2ban][:freeswitch_logpath] %>
+action   = iptables-multiport[name=freeswitch-dos, port="5060,5061,5080,5081", protocol=all]
+           sendmail-whois[name=FreeSwitch-dos, dest=<%= @node[:fail2ban][:dest_email] %>]
 maxretry = 50
 findtime = 30
 bantime  = 6000
 
 # https://2600hz.atlassian.net/wiki/display/docs/Security
 [opensips-tcp]
-enabled = true
-port = 5060,7000
-protocol = tcp
-filter = opensips
-logpath = <%= @node[:fail2ban][:freeswitch_logpath] %>
-action = iptables-allports[name=opensips-tcp, protocol=all]
-        sendmail-whois[name=OpenSIPS, dest=<%= @node[:fail2ban][:dest_email] %>]
+enabled  = <%= @node[:fail2ban][:opensips] %>
+filter   = opensips
+logpath  = <%= @node[:fail2ban][:opensips_logpath] %>
+action    = iptables-multiport[name=opensips-tcp, port="5060,7000", protocol=tcp]
+            sendmail-whois[name=OpenSIPS, dest=<%= @node[:fail2ban][:dest_email] %>]
 maxretry = 3
-bantime = 259200
+bantime  = 259200
 
 [opensips-udp]
-enabled = true
-port = 5060,7000
-protocol = udp
-filter = opensips
-logpath = <%= @node[:fail2ban][:freeswitch_logpath] %>
-action = iptables-allports[name=opensips-udp, protocol=all]
-    sendmail-whois[name=OpenSIPS, dest=<%= @node[:fail2ban][:dest_email] %>]
+enabled  = <%= @node[:fail2ban][:opensips] %>
+filter   = opensips
+logpath  = <%= @node[:fail2ban][:opensips_logpath] %>
+action   = iptables-multiport[name=opensips-udp, port="5060,7000", protocol=udp]
+           sendmail-whois[name=OpenSIPS, dest=<%= @node[:fail2ban][:dest_email] %>]
 maxretry = 3
-bantime = 259200
+bantime  = 259200
 
 [proftpd-iptables]
 
@@ -283,4 +277,3 @@ action   = iptables-multiport[name=Named, port="domain,953", protocol=tcp]
            sendmail-whois[name=Named, dest=<%= @node[:fail2ban][:dest_email] %>]
 logpath  = /var/log/named/security.log
 ignoreip = 168.192.0.1
-
