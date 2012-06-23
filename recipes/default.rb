@@ -21,11 +21,11 @@ package "fail2ban" do
 end
 
 if node.run_list.include?("role[freeswitch]")
-  set["fail2ban"]["freeswitch"] = "true"
+  node["fail2ban"]["freeswitch"] = "true"
 end
 
 if node.run_list.include?("role[opensips]")
-  set["fail2ban"]["opensips"] = "true"
+  node["fail2ban"]["opensips"] = "true"
 end
 
 %w{ fail2ban jail }.each do |cfg|

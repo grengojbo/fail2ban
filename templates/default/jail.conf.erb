@@ -62,20 +62,39 @@ maxretry = 5
 [freeswitch]
 enabled  = <%= @node[:fail2ban][:freeswitch] %>
 filter   = freeswitch
+port = 5060,5061,5080,5081
 logpath  = <%= @node[:fail2ban][:freeswitch_logpath] %>
 maxretry = 10
-action   = iptables-multiport[name=freeswitch, port="5060,5061,5080,5081", protocol=all]
+action   = iptables-allports[name=freeswitch, protocol=all]
            sendmail-whois[name=FreeSwitch, dest=<%= @node[:fail2ban][:dest_email] %>]
 
 [freeswitch-dos]
 enabled  = <%= @node[:fail2ban][:freeswitch_ddos] %>
 filter   = freeswitch-dos
+port = 5060,5061,5080,5081
 logpath  = <%= @node[:fail2ban][:freeswitch_logpath] %>
-action   = iptables-multiport[name=freeswitch-dos, port="5060,5061,5080,5081", protocol=all]
+action   = iptables-allports[name=freeswitch, protocol=all]
            sendmail-whois[name=FreeSwitch-dos, dest=<%= @node[:fail2ban][:dest_email] %>]
 maxretry = 50
 findtime = 30
 bantime  = 6000
+
+#[freeswitch-tcp]
+#enabled  = <%= @node[:fail2ban][:freeswitch] %>
+#filter   = freeswitch
+#logpath  = <%= @node[:fail2ban][:freeswitch_logpath] %>
+#maxretry = 10
+#action   = iptables-multiport[name=freeswitch, port="5060,5061,5080,5081", protocol=tcp]
+#           sendmail-whois[name=FreeSwitch, dest=<%= @node[:fail2ban][:dest_email] %>]
+#
+#[freeswitch-udp]
+#enabled  = <%= @node[:fail2ban][:freeswitch] %>
+#filter   = freeswitch
+#logpath  = <%= @node[:fail2ban][:freeswitch_logpath] %>
+#maxretry = 10
+#action   = iptables-multiport[name=freeswitch, port="5060,5061,5080,5081", protocol=udp]
+#           sendmail-whois[name=FreeSwitch, dest=<%= @node[:fail2ban][:dest_email] %>]
+#
 
 # https://2600hz.atlassian.net/wiki/display/docs/Security
 [opensips-tcp]
