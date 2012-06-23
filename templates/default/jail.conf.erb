@@ -13,17 +13,17 @@
 # "ignoreip" can be an IP address, a CIDR mask or a DNS host. Fail2ban will not
 # ban a host which matches an address in this list. Several addresses can be
 # defined using space separator.
-ignoreip = 127.0.0.1
+ignoreip = <%= @node[:fail2ban][:ignoreip] %>
 
 # "bantime" is the number of seconds that a host is banned.
-bantime  = 600
+bantime  = <%= @node[:fail2ban][:bantime] %>
 
 # A host is banned if it has generated "maxretry" during the last "findtime"
 # seconds.
-findtime  = 600
+findtime  = <%= @node[:fail2ban][:findtime] %>
 
 # "maxretry" is the number of failures before a host get banned.
-maxretry = 3
+maxretry = <%= @node[:fail2ban][:maxretry] %>
 
 # "backend" specifies the backend used to get files modification. Available
 # options are "inotify", "gamin", "polling" and "auto". This option can be
@@ -36,7 +36,7 @@ maxretry = 3
 # polling: uses a polling algorithm which does not require external libraries.
 # auto:    will choose Inotify if pyinotify is present, if not then it will
 # 	   try Gamin and use that if available, and polling otherwise.
-backend = auto
+backend = <%= @node[:fail2ban][:backend] %>
 
 
 # This jail corresponds to the standard configuration in Fail2ban 0.6.
@@ -44,20 +44,70 @@ backend = auto
 # in the body.
 
 [ssh-iptables]
-
-enabled  = true
+enabled  = <%= @node[:fail2ban][:ssh] %>
 filter   = sshd
-action   = iptables[name=SSH, port=ssh, protocol=tcp]
-           sendmail-whois[name=SSH, dest=root, sender=fail2ban@example.com]
+action   = iptables-multiport[name=SSH, port="ssh,sftp", protocol=tcp]
+           sendmail-whois[name=SSH, dest=<%= @node[:fail2ban][:dest_email] %>]
 logpath  = /var/log/secure
 maxretry = 5
+
+[ssh-ddos]
+enabled = <%= @node[:fail2ban][:ssh_ddos] %>
+filter  = sshd-ddos
+action   = iptables-multiport[name=SSH, port="ssh,sftp", protocol=tcp]
+           sendmail-whois[name=SSH, dest=<%= @node[:fail2ban][:dest_email] %>]
+logpath  = /var/log/secure
+maxretry = 5
+
+[freeswitch]
+enabled  = <%= @node[:fail2ban][:freeswitch] %>
+port     = 5060,5061,5080,5081
+filter   = freeswitch
+logpath  = <%= @node[:fail2ban][:freeswitch_logpath] %>
+maxretry = 10
+action   = iptables-allports[name=freeswitch, protocol=all]
+           sendmail-whois[name=FreeSwitch, dest=<%= @node[:fail2ban][:dest_email] %>]
+
+[freeswitch-dos]
+enabled = <%= @node[:fail2ban][:freeswitch_ddos] %>
+port = 5060,5061,5080,5081
+filter = freeswitch-dos
+logpath = <%= @node[:fail2ban][:freeswitch_logpath] %>
+action = iptables-allports[name=freeswitch-dos, protocol=all]
+        sendmail-whois[name=FreeSwitch, dest=<%= @node[:fail2ban][:dest_email] %>]
+maxretry = 50
+findtime = 30
+bantime  = 6000
+
+# https://2600hz.atlassian.net/wiki/display/docs/Security
+[opensips-tcp]
+enabled = true
+port = 5060,7000
+protocol = tcp
+filter = opensips
+logpath = <%= @node[:fail2ban][:freeswitch_logpath] %>
+action = iptables-allports[name=opensips-tcp, protocol=all]
+        sendmail-whois[name=OpenSIPS, dest=<%= @node[:fail2ban][:dest_email] %>]
+maxretry = 3
+bantime = 259200
+
+[opensips-udp]
+enabled = true
+port = 5060,7000
+protocol = udp
+filter = opensips
+logpath = <%= @node[:fail2ban][:freeswitch_logpath] %>
+action = iptables-allports[name=opensips-udp, protocol=all]
+    sendmail-whois[name=OpenSIPS, dest=<%= @node[:fail2ban][:dest_email] %>]
+maxretry = 3
+bantime = 259200
 
 [proftpd-iptables]
 
 enabled  = false
 filter   = proftpd
 action   = iptables[name=ProFTPD, port=ftp, protocol=tcp]
-           sendmail-whois[name=ProFTPD, dest=you@example.com]
+           sendmail-whois[name=ProFTPD, dest=<%= @node[:fail2ban][:dest_email] %>]
 logpath  = /var/log/proftpd/proftpd.log
 maxretry = 6
 
@@ -69,7 +119,7 @@ enabled  = false
 filter   = sasl
 backend  = polling
 action   = iptables[name=sasl, port=smtp, protocol=tcp]
-           sendmail-whois[name=sasl, dest=you@example.com]
+           sendmail-whois[name=sasl, dest=<%= @node[:fail2ban][:dest_email] %>]
 logpath  = /var/log/mail.log
 
 # Here we use TCP-Wrappers instead of Netfilter/Iptables. "ignoreregex" is
@@ -80,7 +130,7 @@ logpath  = /var/log/mail.log
 enabled     = false
 filter      = sshd
 action      = hostsdeny
-              sendmail-whois[name=SSH, dest=you@example.com]
+              sendmail-whois[name=SSH, dest=<%= @node[:fail2ban][:dest_email] %>]
 ignoreregex = for myuser from
 logpath     = /var/log/sshd.log
 
@@ -104,7 +154,7 @@ maxretry = 6
 enabled  = false
 filter   = postfix
 action   = hostsdeny[file=/not/a/standard/path/hosts.deny]
-           sendmail[name=Postfix, dest=you@example.com]
+           sendmail[name=Postfix, dest=<%= @node[:fail2ban][:dest_email] %>]
 logpath  = /var/log/postfix.log
 bantime  = 300
 
@@ -115,7 +165,7 @@ bantime  = 300
 
 enabled  = false
 filter   = vsftpd
-action   = sendmail-whois[name=VSFTPD, dest=you@example.com]
+action   = sendmail-whois[name=VSFTPD, dest=<%= @node[:fail2ban][:dest_email] %>]
 logpath  = /var/log/vsftpd.log
 maxretry = 5
 bantime  = 1800
@@ -127,7 +177,7 @@ bantime  = 1800
 enabled  = false
 filter   = vsftpd
 action   = iptables[name=VSFTPD, port=ftp, protocol=tcp]
-           sendmail-whois[name=VSFTPD, dest=you@example.com]
+           sendmail-whois[name=VSFTPD, dest=<%= @node[:fail2ban][:dest_email] %>]
 logpath  = /var/log/vsftpd.log
 maxretry = 5
 bantime  = 1800
@@ -140,7 +190,7 @@ bantime  = 1800
 enabled  = false
 filter   = apache-badbots
 action   = iptables-multiport[name=BadBots, port="http,https"]
-           sendmail-buffered[name=BadBots, lines=5, dest=you@example.com]
+           sendmail-buffered[name=BadBots, lines=5, dest=<%= @node[:fail2ban][:dest_email] %>]
 logpath  = /var/www/*/logs/access_log
 bantime  = 172800
 maxretry = 1
@@ -152,7 +202,7 @@ maxretry = 1
 enabled  = false
 filter   = apache-noscript
 action   = shorewall
-           sendmail[name=Postfix, dest=you@example.com]
+           sendmail[name=Postfix, dest=<%= @node[:fail2ban][:dest_email] %>]
 logpath  = /var/log/apache2/error_log
 
 # Ban attackers that try to use PHP's URL-fopen() functionality
@@ -193,7 +243,7 @@ maxretry = 2
 enabled  = false
 filter   = sshd
 action   = ipfw[localhost=192.168.0.1]
-           sendmail-whois[name="SSH,IPFW", dest=you@example.com]
+           sendmail-whois[name="SSH,IPFW", dest=<%= @node[:fail2ban][:dest_email] %>]
 logpath  = /var/log/auth.log
 ignoreip = 168.192.0.1
 
@@ -219,7 +269,7 @@ ignoreip = 168.192.0.1
 enabled  = false
 filter   = named-refused
 action   = iptables-multiport[name=Named, port="domain,953", protocol=udp]
-           sendmail-whois[name=Named, dest=you@example.com]
+           sendmail-whois[name=Named, dest=<%= @node[:fail2ban][:dest_email] %>]
 logpath  = /var/log/named/security.log
 ignoreip = 168.192.0.1
 
@@ -230,7 +280,7 @@ ignoreip = 168.192.0.1
 enabled  = false
 filter   = named-refused
 action   = iptables-multiport[name=Named, port="domain,953", protocol=tcp]
-           sendmail-whois[name=Named, dest=you@example.com]
+           sendmail-whois[name=Named, dest=<%= @node[:fail2ban][:dest_email] %>]
 logpath  = /var/log/named/security.log
 ignoreip = 168.192.0.1
 
