@@ -22,6 +22,7 @@ end
 
 if node.run_list.include?("role[freeswitch]")
   node["fail2ban"]["freeswitch"] = "true"
+  node["fail2ban"]["freeswitch_ddos"] = "true"
 end
 
 if node.run_list.include?("role[opensips]")
